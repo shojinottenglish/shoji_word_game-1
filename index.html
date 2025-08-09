@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英単語道場：育成シミュレーションゲーム</title>
+    <!-- Tailwind CSSのCDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tone.jsのCDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.min.js"></script>
+    <!-- 外部CSSファイルへのリンク -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="min-h-screen bg-gradient-to-br from-indigo-100 to-purple-200 flex items-center justify-center p-4">
+        <div class="game-container bg-white rounded-3xl shadow-2xl p-8 max-w-4xl w-full flex flex-col lg:flex-row gap-8">
+            <!-- 左側: プレイヤー情報と先生のコメント -->
+            <div class="flex flex-col gap-6 w-full lg:w-1/3">
+                <div class="player-info bg-purple-100 p-6 rounded-2xl shadow-inner border border-purple-200">
+                    <h2 class="text-2xl font-bold text-purple-800 mb-4 text-center">プレイヤー情報</h2>
+                    <p class="text-lg text-gray-700 mb-2">現在のスコア: <span id="score" class="font-bold text-indigo-700">0</span></p>
+                    <p class="text-lg text-gray-700 mb-2">学園祭まで: <span id="current-day-display" class="font-bold text-indigo-700">1日目</span></p>
+                    <div class="stats mt-4 border-t pt-4 border-purple-200">
+                        <p class="text-lg text-gray-700 mb-1">学力: <span id="stat-academic" class="font-bold text-green-600">1.0</span></p>
+                        <p class="text-lg text-gray-700 mb-1">集中力: <span id="stat-concentration" class="font-bold text-yellow-600">1.0</span></p>
+                        <p class="text-lg text-gray-700">運: <span id="stat-luck" class="font-bold text-blue-600">1.0</span></p>
+                    </div>
+                </div>
+
+                <div class="shoji-comment-box bg-yellow-100 p-6 rounded-2xl shadow-inner border border-yellow-200 max-h-48 overflow-y-auto">
+                    <h2 class="text-xl font-bold text-yellow-800 mb-3 text-center">SHOJI先生のコメント</h2>
+                    <p id="shoji-comment" class="text-gray-800 italic leading-relaxed text-justify">
+                        SHOJI先生の英単語道場へようこそ！難易度を選んでゲームを始めよう！
+                    </p>
+                </div>
+            </div>
+
+            <!-- 右側: メインゲームエリア -->
+            <div class="game-area flex flex-col gap-6 w-full lg:w-2/3">
+                <h1 class="text-4xl font-extrabold text-indigo-800 mb-2 text-center">英単語道場</h1>
+
+                <!-- 黒板エリア -->
+                <div id="blackboard-area" class="blackboard bg-gray-800 text-white p-8 rounded-2xl shadow-xl flex flex-col items-center justify-center min-h-[250px] relative overflow-hidden">
+                    <p id="blackboard-word" class="text-5xl font-extrabold tracking-wide mb-6 text-shadow-lg transition-transform duration-500 ease-in-out">難易度を選択してください</p>
+                    <div id="feedback-message" class="text-2xl font-bold hidden text-center absolute bottom-4 left-0 right-0"></div>
+                </div>
+
+                <!-- タイマー -->
+                <div id="timer-area" class="w-full bg-gray-200 rounded-full h-4 mb-4 overflow-hidden shadow-inner hidden">
+                    <div id="timer-bar" class="bg-green-500 h-4 rounded-full transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+                    <div id="timer-text" class="text-sm font-semibold text-gray-700 mt-1 text-center">残り時間: 10秒</div>
+                </div>
+
+                <!-- 問題数表示 -->
+                <p class="text-lg text-gray-600 text-center">全問数: <span id="total-questions" class="font-bold text-gray-800">100</span></p>
+
+                <!-- 難易度選択 -->
+                <div id="difficulty-selection" class="flex justify-center gap-4">
+                    <button class="difficulty-button px-8 py-4 bg-green-500 text-white text-2xl font-bold rounded-xl shadow-lg hover:bg-green-600 transition duration-300 transform hover:-translate-y-1 active:scale-95" data-difficulty="easy">かんたん</button>
+                    <button class="difficulty-button px-8 py-4 bg-blue-500 text-white text-2xl font-bold rounded-xl shadow-lg hover:bg-blue-600 transition duration-300 transform hover:-translate-y-1 active:scale-95" data-difficulty="normal">ふつう</button>
+                    <button class="difficulty-button px-8 py-4 bg-red-500 text-white text-2xl font-bold rounded-xl shadow-lg hover:bg-red-600 transition duration-300 transform hover:-translate-y-1 active:scale-95" data-difficulty="hard">むずかしい</button>
+                </div>
+
+                <!-- 回答ボタン -->
+                <div id="answer-buttons" class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                    <!-- JavaScriptでボタンが生成されます -->
+                </div>
+
+                <!-- ゲームスタートボタン (会話進行用にも使用) -->
+                <button id="start-button" class="px-8 py-4 bg-indigo-600 text-white text-2xl font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition duration-300 transform hover:-translate-y-1 active:scale-95 hidden mt-6">ゲームスタート</button>
+
+                <!-- 放課後アクション -->
+                <div id="after-school-actions" class="hidden flex flex-col items-center gap-4 mt-6 p-6 bg-blue-50 rounded-2xl shadow-inner border border-blue-200">
+                    <h3 class="text-2xl font-bold text-blue-800 mb-3">放課後の過ごし方</h3>
+                    <p class="text-lg text-gray-700 mb-4">残りのアクション回数: <span id="remaining-actions" class="font-bold text-blue-700">0</span></p>
+                    <div class="flex flex-wrap justify-center gap-4 w-full">
+                        <button id="action-study" class="px-6 py-3 bg-purple-500 text-white text-xl font-semibold rounded-xl shadow-md hover:bg-purple-600 transition duration-300 transform active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed">勉強する</button>
+                        <button id="action-talk-classmate" class="px-6 py-3 bg-teal-500 text-white text-xl font-semibold rounded-xl shadow-md hover:bg-teal-600 transition duration-300 transform active:scale-98 disabled:opacity-50 disabled:cursor-not-allowed">クラスメイトと話す</button>
+                        <button id="action-next-day" class="px-6 py-3 bg-orange-500 text-white text-xl font-semibold rounded-xl shadow-md hover:bg-orange-600 transition duration-300 transform active:scale-98">次の日へ</button>
+                    </div>
+                </div>
+
+                <!-- 場所選択 -->
+                <div id="location-selection-area" class="hidden flex flex-col items-center gap-4 mt-6 p-6 bg-green-50 rounded-2xl shadow-inner border border-green-200">
+                    <h3 class="text-2xl font-bold text-green-800 mb-3">どこへ行く？</h3>
+                    <div class="flex flex-wrap justify-center gap-4 w-full">
+                        <button class="location-button px-6 py-3 bg-indigo-500 text-white text-xl font-semibold rounded-xl shadow-md hover:bg-indigo-600 transition duration-300 transform active:scale-98" data-location="school">学校へ行く</button>
+                        <button class="location-button px-6 py-3 bg-yellow-500 text-white text-xl font-semibold rounded-xl shadow-md hover:bg-yellow-600 transition duration-300 transform active:scale-98" data-location="internationalExchange">国際交流活動に参加する</button>
+                    </div>
+                </div>
+
+                <!-- 新しいミニゲームのコンテナ -->
+                <div id="falling-words-mini-game-container" class="hidden flex flex-col items-center justify-center p-4 bg-gray-700 rounded-2xl shadow-xl min-h-[400px]">
+                    <h2 class="text-3xl font-bold text-white mb-4">英単語キャッチ！</h2>
+                    <div class="w-full flex justify-between text-white text-xl font-semibold mb-4 px-2">
+                        <span>スコア: <span id="mini-game-score">0</span></span>
+                        <span>残りライフ: <span id="mini-game-lives">3</span></span>
+                    </div>
+                    <canvas id="fallingWordsCanvas" width="600" height="300" class="bg-gray-900 border-4 border-blue-400 rounded-lg shadow-inner"></canvas>
+                    <div id="falling-words-options" class="grid grid-cols-2 gap-2 mt-4 w-full max-w-lg">
+                        <!-- ミニゲームの選択肢ボタンはここに生成されます -->
+                    </div>
+                    <button id="start-mini-game-button" class="px-6 py-3 bg-green-500 text-white text-xl font-semibold rounded-xl shadow-md hover:bg-green-600 transition duration-300 transform active:scale-95 mt-4">ミニゲーム開始</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- メッセージボックスオーバーレイ -->
+    <div id="message-box-overlay" class="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 hidden">
+        <div id="message-box" class="bg-white rounded-xl shadow-2xl p-8 max-w-md w-full text-center relative transform transition-all duration-300 scale-95 opacity-0">
+            <h3 id="message-box-title" class="text-3xl font-bold text-gray-800 mb-4">タイトル</h3>
+            <p id="message-box-content" class="text-lg text-gray-700 mb-6 leading-relaxed"></p>
+            <button id="message-box-close" class="px-6 py-3 bg-red-500 text-white text-xl font-semibold rounded-lg shadow-md hover:bg-red-600 transition duration-300 transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75">閉じる</button>
+            <button id="dialogue-next-button" class="px-6 py-3 bg-blue-500 text-white text-xl font-semibold rounded-lg shadow-md hover:bg-blue-600 transition duration-300 transform active:scale-95 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity%75 hidden animate-pulse">次へ</button>
+        </div>
+    </div>
+
+    <!-- 外部JavaScriptファイルへのリンク -->
+    <script src="script.js"></script>
+</body>
+</html>

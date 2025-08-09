@@ -1,0 +1,73 @@
+/* bodyの基本スタイル */
+body {
+    font-family: 'Inter', sans-serif;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    line-height: 1.6;
+    color: #333;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* カスタムアニメーション */
+@keyframes flashCorrect {
+    0% { background-color: #4CAF50; } /* 緑色のフラッシュ */
+    50% { background-color: #28a745; }
+    100% { background-color: #4CAF50; }
+}
+
+@keyframes shakeIncorrect {
+    0%, 100% { transform: translateX(0); }
+    10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+    20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.blackboard-flash-correct {
+    animation: flashCorrect 0.8s ease-out;
+}
+
+.blackboard-shake-incorrect {
+    animation: shakeIncorrect 0.5s ease-out;
+}
+
+.blackboard-word-animated {
+    animation: fadeInScale 0.5s ease-out forwards;
+}
+
+@keyframes fadeInScale {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* 黒板の文字に影 */
+.text-shadow-lg {
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.4);
+}
+
+/* メッセージボックスのアニメーション */
+@keyframes fadeInScaleUp {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+#message-box {
+    animation: fadeInScaleUp 0.3s ease-out forwards;
+}
+
+/* スクロールバーのスタイル */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
